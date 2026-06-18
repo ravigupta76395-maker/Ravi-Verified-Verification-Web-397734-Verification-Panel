@@ -1,0 +1,1191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>PIRO Bot — Admin Panel</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+
+:root{
+  --bg:#070c18;
+  --sidebar:#0c1322;
+  --card:#0f1929;
+  --card2:#132035;
+  --border:rgba(255,255,255,0.07);
+  --blue:#3d8ef8;
+  --blue2:#60b0ff;
+  --green:#22c55e;
+  --red:#ef4444;
+  --yellow:#f59e0b;
+  --purple:#a855f7;
+  --text:#e2eaff;
+  --muted:#5a7099;
+  --muted2:#3a4a66;
+}
+
+html,body{height:100%;background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;overflow-x:hidden}
+
+/* ── Layout ── */
+.layout{display:flex;min-height:100vh}
+
+/* ── Sidebar ── */
+.sidebar{
+  width:230px;flex-shrink:0;
+  background:var(--sidebar);
+  border-right:1px solid var(--border);
+  display:flex;flex-direction:column;
+  position:fixed;top:0;left:0;bottom:0;
+  z-index:100;
+  transition:transform 0.3s;
+}
+.sidebar-logo{
+  padding:22px 20px 18px;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;gap:10px;
+}
+.logo-icon{
+  width:36px;height:36px;border-radius:10px;
+  background:linear-gradient(135deg,#1a3a6c,#3d8ef8);
+  display:flex;align-items:center;justify-content:center;
+  font-size:1.1rem;flex-shrink:0;
+}
+.logo-text{font-size:0.9rem;font-weight:700;color:#fff;line-height:1.2}
+.logo-sub{font-size:0.65rem;color:var(--muted);margin-top:1px}
+
+.nav{flex:1;padding:12px 10px;display:flex;flex-direction:column;gap:2px;overflow-y:auto}
+.nav-section{font-size:0.6rem;font-weight:700;letter-spacing:0.12em;color:var(--muted2);text-transform:uppercase;padding:10px 10px 4px}
+.nav-item{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 12px;border-radius:9px;
+  font-size:0.82rem;font-weight:500;color:var(--muted);
+  cursor:pointer;transition:all 0.15s;border:none;background:none;width:100%;text-align:left;
+}
+.nav-item:hover{background:rgba(61,142,248,0.08);color:var(--text)}
+.nav-item.active{background:rgba(61,142,248,0.14);color:var(--blue2);font-weight:600}
+.nav-item svg{flex-shrink:0;opacity:0.7}
+.nav-item.active svg{opacity:1}
+.nav-badge{margin-left:auto;font-size:0.65rem;font-weight:700;padding:2px 7px;border-radius:10px;background:rgba(239,68,68,0.2);color:var(--red)}
+
+.sidebar-footer{padding:14px 16px;border-top:1px solid var(--border);font-size:0.7rem;color:var(--muted2);text-align:center;line-height:1.6}
+.sidebar-footer span{color:var(--blue);font-weight:600}
+
+/* ── Main ── */
+.main{margin-left:230px;flex:1;display:flex;flex-direction:column;min-height:100vh}
+
+/* ── Topbar ── */
+.topbar{
+  background:rgba(7,12,24,0.95);
+  border-bottom:1px solid var(--border);
+  padding:0 24px;
+  height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:90;
+  backdrop-filter:blur(12px);
+}
+.topbar-left{display:flex;align-items:center;gap:12px}
+.page-title{font-size:1rem;font-weight:700;color:#fff}
+.page-breadcrumb{font-size:0.75rem;color:var(--muted)}
+.topbar-right{display:flex;align-items:center;gap:10px}
+.topbar-btn{
+  display:flex;align-items:center;gap:6px;
+  padding:7px 14px;border-radius:8px;border:none;cursor:pointer;
+  font-size:0.78rem;font-weight:600;font-family:'Inter',sans-serif;
+  transition:all 0.15s;
+}
+.btn-ghost{background:rgba(255,255,255,0.05);color:var(--text)}
+.btn-ghost:hover{background:rgba(255,255,255,0.1)}
+.btn-blue{background:var(--blue);color:#fff}
+.btn-blue:hover{background:var(--blue2)}
+.btn-red{background:rgba(239,68,68,0.15);color:var(--red);border:1px solid rgba(239,68,68,0.3)}
+.btn-red:hover{background:rgba(239,68,68,0.25)}
+.btn-green{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.25)}
+.btn-green:hover{background:rgba(34,197,94,0.2)}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--green);animation:livePulse 1.5s ease-in-out infinite}
+@keyframes livePulse{0%,100%{box-shadow:0 0 0 0 rgba(34,197,94,0.4)}50%{box-shadow:0 0 0 5px rgba(34,197,94,0)}}
+
+/* ── Content ── */
+.content{padding:24px;flex:1}
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* ── Stats Grid ── */
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.stat-card{
+  background:var(--card);
+  border:1px solid var(--border);
+  border-radius:14px;padding:18px 16px;
+  position:relative;overflow:hidden;
+  transition:border-color 0.2s;
+}
+.stat-card:hover{border-color:rgba(61,142,248,0.3)}
+.stat-card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  border-radius:2px 2px 0 0;
+}
+.stat-card.blue::before{background:linear-gradient(90deg,#3d8ef8,#60b0ff)}
+.stat-card.green::before{background:linear-gradient(90deg,#22c55e,#4ade80)}
+.stat-card.red::before{background:linear-gradient(90deg,#ef4444,#f87171)}
+.stat-card.yellow::before{background:linear-gradient(90deg,#f59e0b,#fbbf24)}
+.stat-card.purple::before{background:linear-gradient(90deg,#a855f7,#c084fc)}
+.stat-icon{font-size:1.4rem;margin-bottom:10px}
+.stat-val{font-size:1.8rem;font-weight:800;color:#fff;font-family:'JetBrains Mono',monospace;line-height:1}
+.stat-label{font-size:0.72rem;color:var(--muted);margin-top:5px;font-weight:500;text-transform:uppercase;letter-spacing:0.07em}
+.stat-change{
+  font-size:0.68rem;font-weight:600;margin-top:6px;
+  display:inline-flex;align-items:center;gap:3px;padding:2px 7px;border-radius:10px;
+}
+.stat-change.up{background:rgba(34,197,94,0.1);color:var(--green)}
+.stat-change.down{background:rgba(239,68,68,0.1);color:var(--red)}
+
+/* ── Section Header ── */
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;flex-wrap:wrap;gap:10px}
+.section-title{font-size:0.9rem;font-weight:700;color:#fff;display:flex;align-items:center;gap:8px}
+.section-title .badge{
+  font-size:0.65rem;font-weight:700;padding:2px 8px;border-radius:10px;
+  background:rgba(61,142,248,0.15);color:var(--blue2);
+}
+.search-box{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:7px 12px;
+  font-size:0.8rem;color:var(--text);
+}
+.search-box input{background:none;border:none;outline:none;color:var(--text);font-size:0.8rem;font-family:'Inter',sans-serif;width:160px}
+.search-box input::placeholder{color:var(--muted)}
+
+/* ── Table ── */
+.table-wrap{background:var(--card);border:1px solid var(--border);border-radius:14px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+thead tr{background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border)}
+th{padding:11px 16px;text-align:left;font-size:0.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;white-space:nowrap}
+td{padding:12px 16px;font-size:0.8rem;color:var(--text);border-bottom:1px solid rgba(255,255,255,0.04)}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:rgba(255,255,255,0.02)}
+.mono{font-family:'JetBrains Mono',monospace;font-size:0.75rem}
+
+/* ── Badges ── */
+.badge-pill{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:0.68rem;font-weight:700;letter-spacing:0.04em}
+.badge-green{background:rgba(34,197,94,0.12);color:var(--green);border:1px solid rgba(34,197,94,0.25)}
+.badge-red{background:rgba(239,68,68,0.12);color:var(--red);border:1px solid rgba(239,68,68,0.25)}
+.badge-yellow{background:rgba(245,158,11,0.1);color:var(--yellow);border:1px solid rgba(245,158,11,0.25)}
+.badge-blue{background:rgba(61,142,248,0.12);color:var(--blue2);border:1px solid rgba(61,142,248,0.25)}
+.badge-purple{background:rgba(168,85,247,0.12);color:var(--purple);border:1px solid rgba(168,85,247,0.25)}
+
+/* Action buttons in table */
+.tbl-btn{
+  padding:4px 10px;border-radius:6px;border:none;cursor:pointer;
+  font-size:0.7rem;font-weight:600;font-family:'Inter',sans-serif;
+  transition:all 0.15s;
+}
+.tbl-ban{background:rgba(239,68,68,0.12);color:var(--red)}
+.tbl-ban:hover{background:rgba(239,68,68,0.25)}
+.tbl-unban{background:rgba(34,197,94,0.1);color:var(--green)}
+.tbl-unban:hover{background:rgba(34,197,94,0.2)}
+
+/* ── Same Device % Slider ── */
+.settings-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.setting-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:20px;
+}
+.setting-label{font-size:0.75rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.setting-label .tip{font-size:0.65rem;background:rgba(61,142,248,0.12);color:var(--blue2);padding:2px 7px;border-radius:8px;text-transform:none;letter-spacing:0}
+
+/* Slider */
+.slider-wrap{display:flex;flex-direction:column;gap:10px}
+.slider-row{display:flex;align-items:center;gap:14px}
+.slider-val{
+  font-family:'JetBrains Mono',monospace;font-size:1.4rem;font-weight:700;
+  color:#fff;min-width:52px;text-align:right;
+}
+.slider-val span{font-size:0.8rem;color:var(--blue);font-weight:600}
+input[type=range]{
+  -webkit-appearance:none;flex:1;height:5px;border-radius:5px;
+  background:rgba(255,255,255,0.08);outline:none;cursor:pointer;
+}
+input[type=range]::-webkit-slider-thumb{
+  -webkit-appearance:none;width:18px;height:18px;border-radius:50%;
+  background:linear-gradient(135deg,#3d8ef8,#60b0ff);
+  box-shadow:0 0 10px rgba(61,142,248,0.5);cursor:pointer;
+  transition:box-shadow 0.2s;
+}
+input[type=range]::-webkit-slider-thumb:hover{box-shadow:0 0 18px rgba(61,142,248,0.8)}
+.slider-desc{font-size:0.75rem;color:var(--muted);line-height:1.5}
+.slider-preview{
+  background:rgba(61,142,248,0.06);border:1px solid rgba(61,142,248,0.15);
+  border-radius:9px;padding:10px 14px;font-size:0.78rem;color:var(--blue2);
+  line-height:1.5;margin-top:4px;
+}
+
+/* Toggle */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.toggle-info{font-size:0.8rem;color:var(--text);font-weight:500}
+.toggle-sub{font-size:0.71rem;color:var(--muted);margin-top:2px}
+.toggle{position:relative;width:42px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{
+  position:absolute;inset:0;background:rgba(255,255,255,0.1);
+  border-radius:24px;cursor:pointer;transition:0.25s;
+  border:1px solid var(--border);
+}
+.toggle-slider::before{
+  content:'';position:absolute;left:3px;top:3px;
+  width:16px;height:16px;border-radius:50%;
+  background:#fff;transition:0.25s;
+}
+.toggle input:checked + .toggle-slider{background:rgba(61,142,248,0.5);border-color:rgba(61,142,248,0.5)}
+.toggle input:checked + .toggle-slider::before{transform:translateX(18px);background:var(--blue2)}
+
+/* Select */
+.styled-select{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;color:var(--text);
+  font-size:0.82rem;font-family:'Inter',sans-serif;
+  outline:none;width:100%;cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%235a7099' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;
+  padding-right:32px;
+}
+.styled-select:focus{border-color:rgba(61,142,248,0.5)}
+
+/* Text input */
+.styled-input{
+  background:var(--card2);border:1px solid var(--border);
+  border-radius:8px;padding:9px 12px;color:var(--text);
+  font-size:0.82rem;font-family:'Inter',sans-serif;
+  outline:none;width:100%;
+}
+.styled-input:focus{border-color:rgba(61,142,248,0.5)}
+.styled-input::placeholder{color:var(--muted)}
+
+/* ── Chart Bar ── */
+.mini-chart{display:flex;align-items:flex-end;gap:4px;height:60px;margin-top:12px}
+.chart-bar{
+  flex:1;border-radius:4px 4px 0 0;
+  background:linear-gradient(180deg,var(--blue),rgba(61,142,248,0.2));
+  min-width:0;transition:height 0.3s;cursor:pointer;
+  position:relative;
+}
+.chart-bar:hover::after{
+  content:attr(data-val);
+  position:absolute;top:-22px;left:50%;transform:translateX(-50%);
+  font-size:0.65rem;color:var(--blue2);white-space:nowrap;font-weight:600;
+}
+.chart-labels{display:flex;gap:4px;margin-top:4px}
+.chart-label{flex:1;text-align:center;font-size:0.6rem;color:var(--muted2)}
+
+/* ── Ring Chart ── */
+.ring-wrap{display:flex;align-items:center;gap:20px}
+.ring-svg{flex-shrink:0}
+.ring-legend{display:flex;flex-direction:column;gap:8px}
+.ring-item{display:flex;align-items:center;gap:8px;font-size:0.78rem}
+.ring-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── Toast ── */
+.toast{
+  position:fixed;bottom:24px;right:24px;z-index:999;
+  background:#1a2a42;border:1px solid var(--blue);
+  border-radius:10px;padding:12px 18px;
+  font-size:0.82rem;color:var(--text);
+  box-shadow:0 8px 32px rgba(0,0,0,0.4);
+  transform:translateY(80px);opacity:0;
+  transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  display:flex;align-items:center;gap:10px;min-width:200px;
+}
+.toast.show{transform:translateY(0);opacity:1}
+.toast.success{border-color:var(--green);background:#0f2218}
+.toast.error{border-color:var(--red);background:#2a0f0f}
+
+/* ── Modal ── */
+.modal-overlay{
+  position:fixed;inset:0;background:rgba(0,0,0,0.7);
+  z-index:200;display:none;align-items:center;justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.modal-overlay.show{display:flex}
+.modal{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:16px;padding:28px;width:90%;max-width:400px;
+  box-shadow:0 20px 60px rgba(0,0,0,0.5);
+  animation:modalIn 0.25s ease;
+}
+@keyframes modalIn{from{transform:scale(0.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal-title{font-size:1rem;font-weight:700;color:#fff;margin-bottom:6px}
+.modal-desc{font-size:0.8rem;color:var(--muted);margin-bottom:20px;line-height:1.5}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end}
+
+/* ── Empty State ── */
+.empty-state{text-align:center;padding:48px 20px;color:var(--muted)}
+.empty-state .icon{font-size:2.5rem;margin-bottom:12px;opacity:0.4}
+.empty-state p{font-size:0.82rem;line-height:1.6}
+
+/* Divider */
+.divider{border:none;border-top:1px solid var(--border);margin:20px 0}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .settings-grid{grid-template-columns:1fr}
+}
+@media(max-width:700px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .stats-grid{grid-template-columns:repeat(2,1fr)}
+  .topbar{padding:0 14px}
+}
+</style>
+</head>
+<body>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✅</span>
+  <span id="toastMsg">Action completed</span>
+</div>
+
+<!-- Ban Modal -->
+<div class="modal-overlay" id="banModal">
+  <div class="modal">
+    <div class="modal-title">🚫 Ban User</div>
+    <div class="modal-desc">Enter User ID to ban from bot. They will receive an automatic ban message.</div>
+    <input class="styled-input" id="banInput" placeholder="Enter User ID e.g. 123456789" style="margin-bottom:16px">
+    <div class="modal-actions">
+      <button class="topbar-btn btn-ghost" onclick="closeModal()">Cancel</button>
+      <button class="topbar-btn btn-red" onclick="banUser()">🚫 Ban User</button>
+    </div>
+  </div>
+</div>
+
+<!-- Layout -->
+<div class="layout">
+
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-icon">🛡</div>
+      <div>
+        <div class="logo-text">PIRO Bot</div>
+        <div class="logo-sub">Admin Control Panel</div>
+      </div>
+    </div>
+
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <button class="nav-item active" onclick="switchTab('dashboard',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+
+      <div class="nav-section">Users</div>
+      <button class="nav-item" onclick="switchTab('verified',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        Verified Users
+        <span class="nav-badge" id="navVerified">0</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('samedev',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="18" r="1"/></svg>
+        Same Device
+        <span class="nav-badge" id="navSameDev">0</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('vpn',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        VPN Banned
+        <span class="nav-badge" id="navVPN">0</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('banned',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="4.93" y1="4.93" x2="19.07" y2="19.07"/></svg>
+        Banned Users
+        <span class="nav-badge" id="navBanned">0</span>
+      </button>
+
+      <div class="nav-section">Control</div>
+      <button class="nav-item" onclick="switchTab('settings',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+        Bot Settings
+      </button>
+      <button class="nav-item" onclick="switchTab('banuser',this)">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+        Ban / Unban
+      </button>
+    </nav>
+
+    <div class="sidebar-footer">
+      Powered By <span>Ravi</span> • <span>TasksWallah</span>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+
+    <!-- Topbar -->
+    <div class="topbar">
+      <div class="topbar-left">
+        <div>
+          <div class="page-title" id="pageTitle">Dashboard</div>
+          <div class="page-breadcrumb" id="pageBreadcrumb">Overview & Analytics</div>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div style="display:flex;align-items:center;gap:6px;font-size:0.75rem;color:var(--green)">
+          <div class="live-dot"></div> Live
+        </div>
+        <button class="topbar-btn btn-ghost" onclick="refreshData()">↻ Refresh</button>
+        <button class="topbar-btn btn-red" onclick="openModal()">🚫 Ban User</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- ── DASHBOARD ── -->
+      <div class="tab-panel active" id="tab-dashboard">
+        <div class="stats-grid">
+          <div class="stat-card blue">
+            <div class="stat-icon">👥</div>
+            <div class="stat-val" id="statTotal">0</div>
+            <div class="stat-label">Total Users</div>
+            <div class="stat-change up">↑ +12 today</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-icon">✅</div>
+            <div class="stat-val" id="statVerified">0</div>
+            <div class="stat-label">Verified</div>
+            <div class="stat-change up">↑ +8 today</div>
+          </div>
+          <div class="stat-card yellow">
+            <div class="stat-icon">📱</div>
+            <div class="stat-val" id="statSameDev">0</div>
+            <div class="stat-label">Same Device</div>
+            <div class="stat-change up" id="sameDevPct">— %</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-icon">🚫</div>
+            <div class="stat-val" id="statBanned">0</div>
+            <div class="stat-label">Banned</div>
+            <div class="stat-change down">VPN + Manual</div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div style="display:grid;grid-template-columns:1.5fr 1fr;gap:16px;margin-bottom:22px">
+
+          <!-- Bar Chart -->
+          <div class="setting-card">
+            <div class="setting-label">
+              📊 Weekly Verifications
+              <span class="tip">Last 7 days</span>
+            </div>
+            <div class="mini-chart" id="barChart"></div>
+            <div class="chart-labels" id="barLabels"></div>
+          </div>
+
+          <!-- Ring Chart -->
+          <div class="setting-card">
+            <div class="setting-label">🍩 User Breakdown</div>
+            <div class="ring-wrap" style="margin-top:8px">
+              <svg class="ring-svg" width="90" height="90" viewBox="0 0 90 90">
+                <circle cx="45" cy="45" r="34" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="14"/>
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#3d8ef8" stroke-width="14"
+                  stroke-dasharray="213.6" stroke-dashoffset="0" stroke-linecap="round"
+                  transform="rotate(-90 45 45)" id="ringVerified"/>
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#f59e0b" stroke-width="14"
+                  stroke-dasharray="213.6" stroke-dashoffset="0" stroke-linecap="round"
+                  transform="rotate(-90 45 45)" id="ringSameDev"/>
+                <circle cx="45" cy="45" r="34" fill="none" stroke="#ef4444" stroke-width="14"
+                  stroke-dasharray="213.6" stroke-dashoffset="0" stroke-linecap="round"
+                  transform="rotate(-90 45 45)" id="ringBanned"/>
+                <text x="45" y="49" text-anchor="middle" fill="#fff" font-size="13" font-weight="700" font-family="Inter">
+                  <tspan id="ringPct">0%</tspan>
+                </text>
+              </svg>
+              <div class="ring-legend">
+                <div class="ring-item"><div class="ring-dot" style="background:#3d8ef8"></div><span>Verified <span id="lgVerified" style="color:var(--blue2);font-weight:600">0</span></span></div>
+                <div class="ring-item"><div class="ring-dot" style="background:#f59e0b"></div><span>Same Dev <span id="lgSameDev" style="color:var(--yellow);font-weight:600">0</span></span></div>
+                <div class="ring-item"><div class="ring-dot" style="background:#ef4444"></div><span>Banned <span id="lgBanned" style="color:var(--red);font-weight:600">0</span></span></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Same Device % Alert -->
+        <div id="sameDevAlert" style="display:none;background:rgba(245,158,11,0.08);border:1px solid rgba(245,158,11,0.25);border-radius:12px;padding:14px 18px;margin-bottom:20px;display:flex;align-items:center;gap:12px">
+          <span style="font-size:1.4rem">⚠️</span>
+          <div>
+            <div style="font-size:0.85rem;font-weight:700;color:var(--yellow)">Same Device Rate is High!</div>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:2px" id="alertDesc">Increase Same Device % in Bot Settings to auto-detect more.</div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="section-header">
+          <div class="section-title">Recent Activity <span class="badge" id="recentBadge">0</span></div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th>User ID</th><th>Name</th><th>Event</th><th>Status</th><th>Time</th>
+            </tr></thead>
+            <tbody id="recentTable">
+              <tr><td colspan="5"><div class="empty-state"><div class="icon">📋</div><p>No activity yet.<br>Add demo data from Settings.</p></div></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── VERIFIED USERS ── -->
+      <div class="tab-panel" id="tab-verified">
+        <div class="section-header">
+          <div class="section-title">✅ Verified Users <span class="badge" id="verifiedCount">0</span></div>
+          <div class="search-box">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search by ID or name..." oninput="filterTable('verifiedTable',this.value)">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User ID</th><th>Name</th><th>Device</th><th>VPN</th><th>Verified At</th><th>Action</th></tr></thead>
+            <tbody id="verifiedTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── SAME DEVICE ── -->
+      <div class="tab-panel" id="tab-samedev">
+        <div class="section-header">
+          <div class="section-title">📱 Same Device Users <span class="badge" id="sameDevCount">0</span></div>
+          <div class="search-box">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search..." oninput="filterTable('sameDevTable',this.value)">
+          </div>
+        </div>
+
+        <!-- Same Device % Rate Card -->
+        <div class="setting-card" style="margin-bottom:16px">
+          <div class="setting-label">
+            🎚️ Same Device Detection Rate
+            <span class="tip">Bot Pe Apply Hoga</span>
+          </div>
+          <div class="slider-wrap">
+            <div class="slider-row">
+              <input type="range" min="0" max="100" value="30" id="sameDevSlider" oninput="updateSameDevSlider(this.value)">
+              <div class="slider-val"><span id="sameDevSliderVal">30</span><span>%</span></div>
+            </div>
+            <div class="slider-preview" id="sameDevPreview">
+              30% probability pe same device detect hoga — yani 30 mein se ~9 users ko same device dikhega. Increase karo to zyada users catch karo.
+            </div>
+          </div>
+        </div>
+
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User ID</th><th>Name</th><th>Linked To</th><th>Detected At</th><th>Refer Count</th><th>Action</th></tr></thead>
+            <tbody id="sameDevTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── VPN BANNED ── -->
+      <div class="tab-panel" id="tab-vpn">
+        <div class="section-header">
+          <div class="section-title">🚨 VPN Banned Users <span class="badge" id="vpnCount">0</span></div>
+          <div class="search-box">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+            <input type="text" placeholder="Search..." oninput="filterTable('vpnTable',this.value)">
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User ID</th><th>Name</th><th>Ban Reason</th><th>Banned At</th><th>Action</th></tr></thead>
+            <tbody id="vpnTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── BANNED USERS ── -->
+      <div class="tab-panel" id="tab-banned">
+        <div class="section-header">
+          <div class="section-title">🚫 All Banned Users <span class="badge" id="bannedCount">0</span></div>
+          <div style="display:flex;gap:10px">
+            <div class="search-box">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+              <input type="text" placeholder="Search..." oninput="filterTable('bannedTable',this.value)">
+            </div>
+            <button class="topbar-btn btn-red" onclick="openModal()">+ Ban New</button>
+          </div>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>User ID</th><th>Name</th><th>Reason</th><th>Banned At</th><th>Action</th></tr></thead>
+            <tbody id="bannedTable"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ── SETTINGS ── -->
+      <div class="tab-panel" id="tab-settings">
+        <div class="settings-grid">
+
+          <!-- Verify Type -->
+          <div class="setting-card">
+            <div class="setting-label">🔐 Verify Type</div>
+            <select class="styled-select" id="verifyType" onchange="saveSetting('VERIFY_TYPE',this.value)">
+              <option value="AUTO">AUTO — Captcha + Device</option>
+              <option value="DEVICE">DEVICE — Device Only</option>
+              <option value="NONE">NONE — Skip Verification</option>
+            </select>
+            <div style="font-size:0.75rem;color:var(--muted);margin-top:10px;line-height:1.6">
+              AUTO: Full verification with captcha.<br>
+              DEVICE: Only device fingerprint check.<br>
+              NONE: Skip all — direct to menu.
+            </div>
+          </div>
+
+          <!-- VPN Detection -->
+          <div class="setting-card">
+            <div class="setting-label">🛡️ Detection Settings</div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-info">VPN Auto-Ban</div>
+                <div class="toggle-sub">Ban users using VPN/Proxy</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked onchange="saveSetting('VPN_BAN',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-info">Clone App Ban</div>
+                <div class="toggle-sub">Ban Nicegram, Nekogram etc.</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked onchange="saveSetting('CLONE_BAN',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+            <div class="toggle-row">
+              <div>
+                <div class="toggle-info">Browser Block</div>
+                <div class="toggle-sub">Block non-Telegram access</div>
+              </div>
+              <label class="toggle"><input type="checkbox" checked onchange="saveSetting('BROWSER_BLOCK',this.checked)"><span class="toggle-slider"></span></label>
+            </div>
+          </div>
+
+          <!-- Same Device % -->
+          <div class="setting-card">
+            <div class="setting-label">
+              📱 Same Device Detect %
+              <span class="tip">Main Feature</span>
+            </div>
+            <div class="slider-wrap">
+              <div class="slider-row">
+                <input type="range" min="0" max="100" value="30" id="mainSlider" oninput="updateMainSlider(this.value)">
+                <div class="slider-val"><span id="mainSliderVal">30</span><span>%</span></div>
+              </div>
+              <div class="slider-desc">
+                Jitna % badhao, utne zyada users ko <b style="color:var(--yellow)">Same Device</b> detect hoga bot pe. 0% = koi detect nahi, 100% = sabko detect karo.
+              </div>
+              <div class="slider-preview" id="mainPreview">
+                Current: 30% — Har 100 users mein ~30 ko Same Device dikhega.
+              </div>
+              <button class="topbar-btn btn-blue" style="margin-top:12px;width:100%" onclick="saveSlider()">💾 Save Setting</button>
+            </div>
+          </div>
+
+          <!-- Bot Info -->
+          <div class="setting-card">
+            <div class="setting-label">🤖 Bot Info</div>
+            <div style="display:flex;flex-direction:column;gap:12px">
+              <div>
+                <div style="font-size:0.72rem;color:var(--muted);margin-bottom:5px">Bot Username</div>
+                <input class="styled-input" id="botUsername" placeholder="@YourBot" value="">
+              </div>
+              <div>
+                <div style="font-size:0.72rem;color:var(--muted);margin-bottom:5px">Owner ID</div>
+                <input class="styled-input" id="ownerID" placeholder="Your Telegram ID">
+              </div>
+              <button class="topbar-btn btn-blue" style="width:100%" onclick="saveBotInfo()">💾 Save Bot Info</button>
+            </div>
+          </div>
+
+          <!-- Demo Data -->
+          <div class="setting-card" style="grid-column:1/-1">
+            <div class="setting-label">🧪 Demo Data</div>
+            <div style="font-size:0.78rem;color:var(--muted);margin-bottom:12px">Load sample data to preview admin panel. In real bot, data comes from Bot.getData() calls.</div>
+            <div style="display:flex;gap:10px;flex-wrap:wrap">
+              <button class="topbar-btn btn-blue" onclick="loadDemoData()">⚡ Load Demo Data</button>
+              <button class="topbar-btn btn-ghost" onclick="clearAllData()">🗑️ Clear All Data</button>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ── BAN/UNBAN ── -->
+      <div class="tab-panel" id="tab-banuser">
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+          <div class="setting-card">
+            <div class="setting-label">🚫 Ban a User</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="font-size:0.72rem;color:var(--muted);margin-bottom:5px">User ID</div>
+                <input class="styled-input" id="banUID" placeholder="e.g. 123456789">
+              </div>
+              <div>
+                <div style="font-size:0.72rem;color:var(--muted);margin-bottom:5px">Reason</div>
+                <select class="styled-select" id="banReason">
+                  <option>VPN Usage</option>
+                  <option>Clone App</option>
+                  <option>Fake Referral</option>
+                  <option>Spam</option>
+                  <option>Manual Ban</option>
+                </select>
+              </div>
+              <button class="topbar-btn btn-red" style="width:100%" onclick="banFromPanel()">🚫 Ban User</button>
+            </div>
+          </div>
+          <div class="setting-card">
+            <div class="setting-label">✅ Unban a User</div>
+            <div style="display:flex;flex-direction:column;gap:10px">
+              <div>
+                <div style="font-size:0.72rem;color:var(--muted);margin-bottom:5px">User ID</div>
+                <input class="styled-input" id="unbanUID" placeholder="e.g. 123456789">
+              </div>
+              <div style="font-size:0.75rem;color:var(--muted);line-height:1.5;padding:10px;background:rgba(255,255,255,0.03);border-radius:8px">
+                User ka ban hatega aur woh dobara bot use kar sakta hai. Verify status reset nahi hoga.
+              </div>
+              <button class="topbar-btn btn-green" style="width:100%" onclick="unbanFromPanel()">✅ Unban User</button>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top:20px">
+          <div class="section-header">
+            <div class="section-title">All Banned Users <span class="badge" id="banPanelCount">0</span></div>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>User ID</th><th>Name</th><th>Reason</th><th>Banned At</th><th>Action</th></tr></thead>
+              <tbody id="banPanelTable"></tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /layout -->
+
+<script>
+// ── State ──
+let state = {
+  verified: [],
+  sameDev:  [],
+  vpnBanned:[],
+  banned:   [],
+  activity: [],
+  sameDevPct: 30,
+  settings: { VERIFY_TYPE:'AUTO', VPN_BAN:true, CLONE_BAN:true, BROWSER_BLOCK:true }
+};
+
+// ── Load from localStorage ──
+function loadState() {
+  try {
+    const saved = localStorage.getItem('piro_admin_state');
+    if (saved) state = { ...state, ...JSON.parse(saved) };
+  } catch(e) {}
+}
+function saveState() {
+  try { localStorage.setItem('piro_admin_state', JSON.stringify(state)); } catch(e) {}
+}
+
+// ── Toast ──
+function showToast(msg, type='success') {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent = msg;
+  document.getElementById('toastIcon').textContent = type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️';
+  t.className = 'toast show ' + type;
+  setTimeout(() => t.className = 'toast', 2500);
+}
+
+// ── Modal ──
+function openModal() {
+  document.getElementById('banModal').classList.add('show');
+  document.getElementById('banInput').focus();
+}
+function closeModal() { document.getElementById('banModal').classList.remove('show'); }
+document.getElementById('banModal').addEventListener('click', e => { if(e.target === e.currentTarget) closeModal(); });
+
+// ── Nav ──
+function switchTab(id, el) {
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  el.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
+  const titles = {
+    dashboard: ['Dashboard','Overview & Analytics'],
+    verified:  ['Verified Users','Users who completed verification'],
+    samedev:   ['Same Device','Users detected on same device'],
+    vpn:       ['VPN Banned','Users banned for using VPN'],
+    banned:    ['Banned Users','All manually & auto banned users'],
+    settings:  ['Bot Settings','Configure verification & detection'],
+    banuser:   ['Ban / Unban','Manage user access'],
+  };
+  document.getElementById('pageTitle').textContent = titles[id][0];
+  document.getElementById('pageBreadcrumb').textContent = titles[id][1];
+  renderAll();
+}
+
+// ── Format time ──
+function timeAgo(ts) {
+  if(!ts) return '—';
+  const diff = Date.now() - ts;
+  if(diff < 60000) return 'Just now';
+  if(diff < 3600000) return Math.floor(diff/60000) + 'm ago';
+  if(diff < 86400000) return Math.floor(diff/3600000) + 'h ago';
+  return new Date(ts).toLocaleDateString();
+}
+
+// ── Render Stats ──
+function renderStats() {
+  const v = state.verified.length;
+  const s = state.sameDev.length;
+  const b = state.banned.length;
+  const vpn = state.vpnBanned.length;
+  const total = v + s + b;
+
+  document.getElementById('statTotal').textContent = total;
+  document.getElementById('statVerified').textContent = v;
+  document.getElementById('statSameDev').textContent = s;
+  document.getElementById('statBanned').textContent = b + vpn;
+
+  document.getElementById('navVerified').textContent = v;
+  document.getElementById('navSameDev').textContent = s;
+  document.getElementById('navVPN').textContent = vpn;
+  document.getElementById('navBanned').textContent = b + vpn;
+
+  document.getElementById('verifiedCount').textContent = v;
+  document.getElementById('sameDevCount').textContent = s;
+  document.getElementById('vpnCount').textContent = vpn;
+  document.getElementById('bannedCount').textContent = b + vpn;
+  document.getElementById('banPanelCount').textContent = b + vpn;
+  document.getElementById('recentBadge').textContent = state.activity.length;
+
+  // Same Device %
+  const pct = total > 0 ? Math.round(s / total * 100) : 0;
+  document.getElementById('sameDevPct').textContent = '📱 ' + pct + '% of total';
+
+  // Legend
+  document.getElementById('lgVerified').textContent = v;
+  document.getElementById('lgSameDev').textContent = s;
+  document.getElementById('lgBanned').textContent = b + vpn;
+
+  // Ring chart
+  const circ = 213.6;
+  const vPct = total > 0 ? v/total : 0;
+  const sPct = total > 0 ? s/total : 0;
+  const bPct = total > 0 ? (b+vpn)/total : 0;
+  document.getElementById('ringVerified').setAttribute('stroke-dashoffset', circ*(1-vPct));
+  document.getElementById('ringSameDev').setAttribute('stroke-dashoffset', circ*(1-(vPct+sPct)));
+  document.getElementById('ringBanned').setAttribute('stroke-dashoffset', circ*(1-(vPct+sPct+bPct)));
+  document.getElementById('ringPct').textContent = pct + '%';
+
+  // Alert if same dev > 40%
+  const alertEl = document.getElementById('sameDevAlert');
+  if(pct > 40) {
+    alertEl.style.display = 'flex';
+    document.getElementById('alertDesc').textContent =
+      `Same device rate ${pct}% hai — Bot Settings mein detection % badhao.`;
+  } else {
+    alertEl.style.display = 'none';
+  }
+}
+
+// ── Bar Chart ──
+function renderBarChart() {
+  const days = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
+  const vals = [4,7,3,9,6,12,5];
+  const max = Math.max(...vals);
+  const chart = document.getElementById('barChart');
+  const labels = document.getElementById('barLabels');
+  chart.innerHTML = '';
+  labels.innerHTML = '';
+  vals.forEach((v,i) => {
+    const bar = document.createElement('div');
+    bar.className = 'chart-bar';
+    bar.style.height = Math.round(v/max*100) + '%';
+    bar.setAttribute('data-val', v + ' users');
+    chart.appendChild(bar);
+    const lbl = document.createElement('div');
+    lbl.className = 'chart-label';
+    lbl.textContent = days[i];
+    labels.appendChild(lbl);
+  });
+}
+
+// ── Table Helpers ──
+function filterTable(tbodyId, query) {
+  const rows = document.getElementById(tbodyId).querySelectorAll('tr');
+  rows.forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(query.toLowerCase()) ? '' : 'none';
+  });
+}
+
+function emptyRow(cols, msg) {
+  return `<tr><td colspan="${cols}"><div class="empty-state"><div class="icon">📋</div><p>${msg}</p></div></td></tr>`;
+}
+
+// ── Render Tables ──
+function renderVerified() {
+  const tbody = document.getElementById('verifiedTable');
+  if(!state.verified.length) { tbody.innerHTML = emptyRow(6,'No verified users yet.'); return; }
+  tbody.innerHTML = state.verified.map(u => `
+    <tr>
+      <td class="mono">${u.id}</td>
+      <td>${u.name}</td>
+      <td><span class="badge-pill badge-blue">${u.device || 'Android'}</span></td>
+      <td><span class="badge-pill badge-green">✓ Clean</span></td>
+      <td style="color:var(--muted);font-size:0.75rem">${timeAgo(u.ts)}</td>
+      <td><button class="tbl-btn tbl-ban" onclick="quickBan('${u.id}','${u.name}')">Ban</button></td>
+    </tr>`).join('');
+}
+
+function renderSameDev() {
+  const tbody = document.getElementById('sameDevTable');
+  if(!state.sameDev.length) { tbody.innerHTML = emptyRow(6,'No same device users.'); return; }
+  tbody.innerHTML = state.sameDev.map(u => `
+    <tr>
+      <td class="mono">${u.id}</td>
+      <td>${u.name}</td>
+      <td class="mono" style="color:var(--muted);font-size:0.72rem">${u.linkedTo || '—'}</td>
+      <td style="color:var(--muted);font-size:0.75rem">${timeAgo(u.ts)}</td>
+      <td><span class="badge-pill badge-yellow">${u.refs || 0} refs</span></td>
+      <td><button class="tbl-btn tbl-ban" onclick="quickBan('${u.id}','${u.name}')">Ban</button></td>
+    </tr>`).join('');
+}
+
+function renderVPN() {
+  const tbody = document.getElementById('vpnTable');
+  if(!state.vpnBanned.length) { tbody.innerHTML = emptyRow(5,'No VPN bans yet.'); return; }
+  tbody.innerHTML = state.vpnBanned.map(u => `
+    <tr>
+      <td class="mono">${u.id}</td>
+      <td>${u.name}</td>
+      <td><span class="badge-pill badge-red">🚨 ${u.reason || 'VPN'}</span></td>
+      <td style="color:var(--muted);font-size:0.75rem">${timeAgo(u.ts)}</td>
+      <td><button class="tbl-btn tbl-unban" onclick="unbanUser('${u.id}')">Unban</button></td>
+    </tr>`).join('');
+}
+
+function renderBanned(tbodyId) {
+  const all = [...state.banned, ...state.vpnBanned];
+  const tbody = document.getElementById(tbodyId);
+  if(!all.length) { tbody.innerHTML = emptyRow(5,'No banned users.'); return; }
+  tbody.innerHTML = all.map(u => `
+    <tr>
+      <td class="mono">${u.id}</td>
+      <td>${u.name}</td>
+      <td><span class="badge-pill badge-red">${u.reason || 'Manual'}</span></td>
+      <td style="color:var(--muted);font-size:0.75rem">${timeAgo(u.ts)}</td>
+      <td><button class="tbl-btn tbl-unban" onclick="unbanUser('${u.id}')">Unban</button></td>
+    </tr>`).join('');
+}
+
+function renderActivity() {
+  const tbody = document.getElementById('recentTable');
+  if(!state.activity.length) { tbody.innerHTML = emptyRow(5,'No activity yet.'); return; }
+  tbody.innerHTML = [...state.activity].reverse().slice(0,20).map(a => {
+    const badges = {verified:'badge-green',sameDev:'badge-yellow',vpnBan:'badge-red',banned:'badge-red',unban:'badge-blue'};
+    const labels = {verified:'✅ Verified',sameDev:'⚠️ Same Device',vpnBan:'🚨 VPN Ban',banned:'🚫 Banned',unban:'✅ Unbanned'};
+    return `<tr>
+      <td class="mono">${a.id}</td>
+      <td>${a.name}</td>
+      <td><span class="badge-pill ${badges[a.event]||'badge-blue'}">${labels[a.event]||a.event}</span></td>
+      <td><span class="badge-pill badge-green">Active</span></td>
+      <td style="color:var(--muted);font-size:0.75rem">${timeAgo(a.ts)}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderAll() {
+  renderStats();
+  renderVerified();
+  renderSameDev();
+  renderVPN();
+  renderBanned('bannedTable');
+  renderBanned('banPanelTable');
+  renderActivity();
+  renderBarChart();
+  document.getElementById('mainSlider').value = state.sameDevPct;
+  document.getElementById('sameDevSlider').value = state.sameDevPct;
+  document.getElementById('mainSliderVal').textContent = state.sameDevPct;
+  document.getElementById('sameDevSliderVal').textContent = state.sameDevPct;
+  updatePreview(state.sameDevPct);
+}
+
+// ── Slider ──
+function updateMainSlider(val) {
+  document.getElementById('mainSliderVal').textContent = val;
+  updatePreview(val);
+  document.getElementById('sameDevSlider').value = val;
+  document.getElementById('sameDevSliderVal').textContent = val;
+}
+function updateSameDevSlider(val) {
+  document.getElementById('sameDevSliderVal').textContent = val;
+  updatePreview(val);
+  document.getElementById('mainSlider').value = val;
+  document.getElementById('mainSliderVal').textContent = val;
+}
+function updatePreview(val) {
+  val = parseInt(val);
+  const approx = Math.round(val * 0.3);
+  const txt = val === 0
+    ? 'Same device detection OFF hai — koi detect nahi hoga.'
+    : val === 100
+    ? 'Sabhi users ko Same Device detect hoga.'
+    : `${val}% probability — Har 100 users mein ~${val} ko Same Device dikhega.`;
+  const el1 = document.getElementById('mainPreview');
+  const el2 = document.getElementById('sameDevPreview');
+  if(el1) el1.textContent = 'Current: ' + val + '% — ' + txt;
+  if(el2) el2.textContent = txt;
+}
+function saveSlider() {
+  state.sameDevPct = parseInt(document.getElementById('mainSlider').value);
+  saveState();
+  showToast('Same Device % saved: ' + state.sameDevPct + '%');
+}
+
+// ── Settings ──
+function saveSetting(key, val) {
+  state.settings[key] = val;
+  saveState();
+  showToast(key + ' updated');
+}
+function saveBotInfo() {
+  const u = document.getElementById('botUsername').value;
+  const o = document.getElementById('ownerID').value;
+  state.settings.botUsername = u;
+  state.settings.ownerID = o;
+  saveState();
+  showToast('Bot info saved!');
+}
+
+// ── Ban / Unban ──
+function addActivity(id, name, event) {
+  state.activity.push({ id, name, event, ts: Date.now() });
+  if(state.activity.length > 100) state.activity.shift();
+}
+
+function banUser() {
+  const uid = document.getElementById('banInput').value.trim();
+  if(!uid) { showToast('User ID daalo!','error'); return; }
+  if(!state.banned.find(u => u.id === uid)) {
+    state.banned.push({ id: uid, name: 'User ' + uid, reason: 'Manual Ban', ts: Date.now() });
+    addActivity(uid, 'User ' + uid, 'banned');
+    saveState();
+  }
+  closeModal();
+  document.getElementById('banInput').value = '';
+  renderAll();
+  showToast('User ' + uid + ' banned!');
+}
+
+function banFromPanel() {
+  const uid = document.getElementById('banUID').value.trim();
+  const reason = document.getElementById('banReason').value;
+  if(!uid) { showToast('User ID daalo!','error'); return; }
+  if(!state.banned.find(u => u.id === uid)) {
+    state.banned.push({ id: uid, name: 'User ' + uid, reason, ts: Date.now() });
+    addActivity(uid, 'User ' + uid, 'banned');
+    saveState();
+  }
+  document.getElementById('banUID').value = '';
+  renderAll();
+  showToast('User ' + uid + ' banned — ' + reason);
+}
+
+function unbanFromPanel() {
+  const uid = document.getElementById('unbanUID').value.trim();
+  if(!uid) { showToast('User ID daalo!','error'); return; }
+  unbanUser(uid);
+  document.getElementById('unbanUID').value = '';
+}
+
+function unbanUser(uid) {
+  const before = state.banned.length + state.vpnBanned.length;
+  state.banned = state.banned.filter(u => u.id !== uid);
+  state.vpnBanned = state.vpnBanned.filter(u => u.id !== uid);
+  if(state.banned.length + state.vpnBanned.length < before) {
+    addActivity(uid, 'User ' + uid, 'unban');
+    saveState();
+    renderAll();
+    showToast('User ' + uid + ' unbanned!');
+  } else {
+    showToast('User not found in ban list','error');
+  }
+}
+
+function quickBan(id, name) {
+  if(!state.banned.find(u => u.id === id)) {
+    state.banned.push({ id, name, reason:'Manual Ban', ts:Date.now() });
+    addActivity(id, name, 'banned');
+    saveState();
+    renderAll();
+    showToast(name + ' banned!');
+  } else {
+    showToast('Already banned','error');
+  }
+}
+
+// ── Refresh ──
+function refreshData() { renderAll(); showToast('Data refreshed!','success'); }
+
+// ── Demo Data ──
+function loadDemoData() {
+  const names = ['Rahul Kumar','Priya Sharma','Amit Singh','Neha Gupta','Ravi Verma','Pooja Patel','Vikash Yadav','Sunita Devi','Ajay Mishra','Kavita Joshi'];
+  const devices = ['Android','iPhone','Android','Android','iPhone'];
+  state.verified = Array.from({length:18},(_,i)=>({
+    id: String(8700000000 + i*13),
+    name: names[i%names.length],
+    device: devices[i%devices.length],
+    ts: Date.now() - i*1800000
+  }));
+  state.sameDev = Array.from({length:7},(_,i)=>({
+    id: String(9800000000 + i*7),
+    name: names[(i+2)%names.length],
+    linkedTo: String(8700000000 + i*13),
+    refs: Math.floor(Math.random()*5),
+    ts: Date.now() - i*3600000
+  }));
+  state.vpnBanned = Array.from({length:4},(_,i)=>({
+    id: String(7600000000 + i*11),
+    name: names[(i+4)%names.length],
+    reason: ['VPN Usage','Proxy','VPN Usage','Data Center'][i],
+    ts: Date.now() - i*7200000
+  }));
+  state.banned = Array.from({length:3},(_,i)=>({
+    id: String(6500000000 + i*9),
+    name: names[(i+6)%names.length],
+    reason: ['Fake Referral','Spam','Manual Ban'][i],
+    ts: Date.now() - i*86400000
+  }));
+  state.activity = [
+    ...state.verified.slice(0,5).map(u=>({...u,event:'verified'})),
+    ...state.sameDev.slice(0,3).map(u=>({...u,event:'sameDev'})),
+    ...state.vpnBanned.slice(0,2).map(u=>({...u,event:'vpnBan'})),
+  ].sort((a,b)=>b.ts-a.ts);
+  saveState();
+  renderAll();
+  showToast('Demo data loaded!');
+}
+
+function clearAllData() {
+  state.verified=[]; state.sameDev=[]; state.vpnBanned=[]; state.banned=[]; state.activity=[];
+  saveState(); renderAll(); showToast('All data cleared','error');
+}
+
+// ── Init ──
+loadState();
+renderAll();
+</script>
+</body>
+</html>
