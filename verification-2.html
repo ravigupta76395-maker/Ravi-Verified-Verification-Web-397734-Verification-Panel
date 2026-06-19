@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Device Verification</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg: #0b0f1a;
+  --card: #141927;
+  --card2: #1a2135;
+  --blue: #3d8ef8;
+  --blue2: #5ba3ff;
+  --glow: rgba(61,142,248,0.5);
+  --text: #ffffff;
+  --muted: #6b7a99;
+  --muted2: #4a5568;
+  --green: #22c55e;
+  --red: #ef4444;
+  --yellow: #f59e0b;
+}
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  font-family: 'Inter', sans-serif;
+  color: var(--text);
+  overflow-x: hidden;
+}
+
+/* ── Header Bar (Telegram style) ── */
+.tg-header {
+  background: #161d2e;
+  padding: 14px 18px 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  position: sticky; top: 0; z-index: 99;
+}
+.tg-avatar {
+  width: 38px; height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #2d4a7a, #3d8ef8);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1rem; font-weight: 700; color: #fff;
+  flex-shrink: 0;
+}
+.tg-info { flex: 1; }
+.tg-name { font-size: 0.95rem; font-weight: 600; color: #fff; }
+.tg-id   { font-size: 0.72rem; color: var(--muted); margin-top: 1px; }
+.tg-scanning {
+  display: flex; align-items: center; gap: 6px;
+  background: rgba(61,142,248,0.12);
+  border: 1px solid rgba(61,142,248,0.3);
+  border-radius: 20px;
+  padding: 5px 12px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: var(--blue2);
+  letter-spacing: 0.04em;
+  transition: all 0.3s;
+}
+.tg-scanning .dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--blue2);
+  animation: blinkDot 1.2s ease-in-out infinite;
+}
+@keyframes blinkDot { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+/* ── Page ── */
+.page {
+  min-height: calc(100vh - 66px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 32px 20px 40px;
+}
+
+/* ── Card ── */
+.card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--card);
+  border-radius: 24px;
+  padding: 40px 28px 36px;
+  box-shadow:
+    0 20px 60px rgba(0,0,0,0.5),
+    0 0 0 1px rgba(255,255,255,0.05),
+    inset 0 1px 0 rgba(255,255,255,0.07);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; bottom: 0;
+  background: radial-gradient(ellipse at 50% 0%, rgba(61,142,248,0.08) 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* ── Fingerprint ── */
+.fp-wrap {
+  position: relative;
+  width: 160px; height: 160px;
+  margin-bottom: 30px;
+  display: flex; align-items: center; justify-content: center;
+}
+
+.fp-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(61,142,248,0.35);
+  animation: ringPulse 2.5s ease-in-out infinite;
+  transition: border-color 0.4s;
+}
+.fp-ring-inner {
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(61,142,248,0.2);
+  animation: ringPulse 2.5s ease-in-out infinite 0.4s;
+  transition: border-color 0.4s;
+}
+.fp-bg {
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(61,142,248,0.15) 0%, rgba(61,142,248,0.04) 60%, transparent 100%);
+  animation: glowPulse 2.5s ease-in-out infinite;
+  transition: background 0.4s;
+}
+
+@keyframes ringPulse {
+  0%,100%{ opacity:0.5; transform:scale(1); }
+  50%    { opacity:1;   transform:scale(1.04); }
+}
+@keyframes glowPulse {
+  0%,100%{ opacity:0.6; }
+  50%    { opacity:1; }
+}
+
+.fp-scanline {
+  position: absolute;
+  inset: 20px;
+  border-radius: 50%;
+  overflow: hidden;
+  pointer-events: none;
+}
+.fp-scanline::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; height: 3px;
+  background: linear-gradient(90deg, transparent, rgba(61,142,248,0.7), transparent);
+  top: -3px;
+  animation: scanDown 2s linear infinite;
+  border-radius: 2px;
+}
+@keyframes scanDown {
+  0%  { top: -3px; opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100%{ top: 100%; opacity: 0; }
+}
+
+.fp-svg {
+  position: relative; z-index: 1;
+  width: 80px; height: 80px;
+  filter: drop-shadow(0 0 12px rgba(61,142,248,0.7));
+  animation: fpGlow 2.5s ease-in-out infinite;
+  transition: filter 0.4s;
+}
+.fp-svg path, .fp-svg circle {
+  transition: stroke 0.4s, fill 0.4s;
+}
+@keyframes fpGlow {
+  0%,100%{ filter: drop-shadow(0 0 8px rgba(61,142,248,0.5)); }
+  50%    { filter: drop-shadow(0 0 20px rgba(61,142,248,0.9)); }
+}
+
+/* ── State: SUCCESS (green) ── */
+.fp-wrap.state-success .fp-ring        { border-color: rgba(34,197,94,0.5); animation: none; }
+.fp-wrap.state-success .fp-ring-inner  { border-color: rgba(34,197,94,0.3); animation: none; }
+.fp-wrap.state-success .fp-bg          { background: radial-gradient(circle, rgba(34,197,94,0.18) 0%, rgba(34,197,94,0.05) 60%, transparent 100%); animation: none; }
+.fp-wrap.state-success .fp-scanline    { display: none; }
+.fp-wrap.state-success .fp-svg         { filter: drop-shadow(0 0 18px rgba(34,197,94,0.8)); animation: fpSuccessPop 0.5s cubic-bezier(0.175,0.885,0.32,1.275); }
+.fp-wrap.state-success .fp-svg path,
+.fp-wrap.state-success .fp-svg circle  { stroke: #22c55e !important; fill: #22c55e !important; }
+@keyframes fpSuccessPop { from{ transform:scale(0.7); opacity:0.4; } to{ transform:scale(1); opacity:1; } }
+
+/* ── State: FAILED (red) ── */
+.fp-wrap.state-failed .fp-ring        { border-color: rgba(239,68,68,0.5); animation: fpShake 0.5s; }
+.fp-wrap.state-failed .fp-ring-inner  { border-color: rgba(239,68,68,0.3); animation: none; }
+.fp-wrap.state-failed .fp-bg          { background: radial-gradient(circle, rgba(239,68,68,0.18) 0%, rgba(239,68,68,0.05) 60%, transparent 100%); animation: none; }
+.fp-wrap.state-failed .fp-scanline    { display: none; }
+.fp-wrap.state-failed .fp-svg         { filter: drop-shadow(0 0 18px rgba(239,68,68,0.8)); animation: fpShake 0.5s; }
+.fp-wrap.state-failed .fp-svg path,
+.fp-wrap.state-failed .fp-svg circle  { stroke: #ef4444 !important; fill: #ef4444 !important; }
+@keyframes fpShake {
+  0%,100% { transform: translateX(0); }
+  20%     { transform: translateX(-6px); }
+  40%     { transform: translateX(6px); }
+  60%     { transform: translateX(-4px); }
+  80%     { transform: translateX(4px); }
+}
+
+/* ── Text ── */
+.main-title {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: #fff;
+  text-align: center;
+  letter-spacing: -0.01em;
+  margin-bottom: 8px;
+  transition: color 0.3s;
+}
+.main-title.success-text { color: var(--green); }
+.main-title.failed-text  { color: var(--red); }
+
+.main-sub {
+  font-size: 0.85rem;
+  color: var(--muted);
+  text-align: center;
+  font-weight: 400;
+  margin-bottom: 28px;
+  min-height: 20px;
+  transition: color 0.3s;
+}
+.main-sub.active { color: var(--blue2); }
+.main-sub.error  { color: var(--red); }
+.main-sub.ok     { color: var(--green); }
+
+/* ── Progress Bar ── */
+.prog-label {
+  width: 100%;
+  display: flex; justify-content: space-between;
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  color: var(--blue);
+  margin-bottom: 7px;
+  text-transform: uppercase;
+}
+.prog-track {
+  width: 100%;
+  height: 5px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  overflow: hidden;
+}
+.prog-fill {
+  height: 100%;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #3d8ef8, #60b0ff);
+  width: 0%;
+  transition: width 0.35s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.prog-fill::after {
+  content: '';
+  position: absolute; right: 0; top: 0; bottom: 0; width: 30px;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5));
+  animation: progShimmer 1.2s linear infinite;
+}
+@keyframes progShimmer { to { transform: translateX(30px); opacity: 0; } }
+
+.prog-wrap-outer { width: 100%; transition: opacity 0.3s; }
+.prog-wrap-outer.hide { display: none; }
+
+/* ── Reason box (shown on failure) ── */
+.reason-box {
+  display: none;
+  width: 100%;
+  background: rgba(239,68,68,0.08);
+  border: 1px solid rgba(239,68,68,0.25);
+  border-radius: 12px;
+  padding: 12px 14px;
+  margin-top: 4px;
+  margin-bottom: 22px;
+  font-size: 0.8rem;
+  color: #ff8a9a;
+  text-align: center;
+  line-height: 1.5;
+}
+.reason-box.show { display: block; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:none} }
+
+/* ── Return / Retry Button ── */
+.return-btn {
+  display: none;
+  width: 100%;
+  padding: 14px;
+  border: none;
+  border-radius: 14px;
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  margin-top: 6px;
+  transition: transform 0.15s, box-shadow 0.15s;
+  color: #fff;
+}
+.return-btn.show { display: flex; align-items: center; justify-content: center; gap: 8px; animation: fadeIn 0.3s ease; }
+.return-btn:active { transform: scale(0.97); }
+
+.return-btn.green-btn {
+  background: linear-gradient(135deg, #16a34a, #22c55e);
+  box-shadow: 0 6px 20px rgba(34,197,94,0.35);
+}
+.return-btn.green-btn:hover { box-shadow: 0 8px 28px rgba(34,197,94,0.5); }
+
+.return-btn.red-btn {
+  background: linear-gradient(135deg, #dc2626, #ef4444);
+  box-shadow: 0 6px 20px rgba(239,68,68,0.35);
+}
+.return-btn.red-btn:hover { box-shadow: 0 8px 28px rgba(239,68,68,0.5); }
+
+/* ── Footer ── */
+.powered {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted2);
+  letter-spacing: 0.04em;
+  line-height: 1.7;
+}
+.powered span { color: var(--blue); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- Telegram-style header -->
+<div class="tg-header">
+  <div class="tg-avatar" id="hdrAvatar">B</div>
+  <div class="tg-info">
+    <div class="tg-name" id="hdrName">User</div>
+    <div class="tg-id" id="hdrId">ID: —</div>
+  </div>
+  <div class="tg-scanning" id="hdrBadge">
+    <div class="dot"></div>
+    <span id="hdrBadgeText">SCANNING</span>
+  </div>
+</div>
+
+<div class="page">
+  <div class="card" id="mainCard">
+
+    <!-- Fingerprint Animation -->
+    <div class="fp-wrap" id="fpWrap">
+      <div class="fp-ring"></div>
+      <div class="fp-ring-inner"></div>
+      <div class="fp-bg"></div>
+      <div class="fp-scanline"></div>
+      <svg class="fp-svg" id="fpSvg" viewBox="0 0 80 80" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M40 8C22.3 8 8 22.3 8 40" stroke="#3d8ef8" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M40 8C57.7 8 72 22.3 72 40" stroke="#3d8ef8" stroke-width="2.5" stroke-linecap="round" opacity="0.6"/>
+        <path d="M16 52C14.7 48.2 14 44.2 14 40C14 25.6 25.6 14 40 14C54.4 14 66 25.6 66 40C66 44 65.3 47.8 64 51.3" stroke="#3d8ef8" stroke-width="2.2" stroke-linecap="round" opacity="0.8"/>
+        <path d="M22 60C19.4 54.2 18 47.8 18 41C18 27.7 28.7 17 42 17" stroke="#3d8ef8" stroke-width="2" stroke-linecap="round" opacity="0.7"/>
+        <path d="M40 22C50.5 22 59 30.5 59 41C59 45.5 57.5 49.7 55 53" stroke="#3d8ef8" stroke-width="1.8" stroke-linecap="round" opacity="0.7"/>
+        <path d="M26 65C23.8 61 22.5 56.2 22.5 51C22.5 37.5 31.7 26 44 24" stroke="#3d8ef8" stroke-width="1.8" stroke-linecap="round" opacity="0.6"/>
+        <path d="M40 30C46.6 30 52 35.4 52 42C52 45.5 50.6 48.7 48.3 51" stroke="#3d8ef8" stroke-width="1.6" stroke-linecap="round" opacity="0.6"/>
+        <path d="M31 68C29 64.2 28 59.8 28 55C28 43.4 34 34 40 32" stroke="#3d8ef8" stroke-width="1.6" stroke-linecap="round" opacity="0.5"/>
+        <path d="M40 38C43 38 45.5 40.5 45.5 43.5C45.5 46 44 48.2 41.8 49.3" stroke="#3d8ef8" stroke-width="1.5" stroke-linecap="round" opacity="0.6"/>
+        <path d="M35 70C33.5 66.5 32.5 62.5 32.5 58.2C32.5 50.3 35.5 43.5 40 40" stroke="#3d8ef8" stroke-width="1.4" stroke-linecap="round" opacity="0.5"/>
+        <circle cx="40" cy="40" r="3" fill="#3d8ef8" opacity="0.9"/>
+      </svg>
+    </div>
+
+    <!-- Title -->
+    <div class="main-title" id="mainTitle">Verifying Device</div>
+    <div class="main-sub active" id="mainSub">Establishing secure handshake...</div>
+
+    <!-- Progress -->
+    <div class="prog-wrap-outer" id="progWrapOuter">
+      <div class="prog-label">
+        <span id="progLabel">ANALYSIS IN PROGRESS</span>
+        <span id="progPct">0%</span>
+      </div>
+      <div class="prog-track">
+        <div class="prog-fill" id="progFill"></div>
+      </div>
+    </div>
+
+    <!-- Reason box (only on failure) -->
+    <div class="reason-box" id="reasonBox"></div>
+
+    <!-- Return / Retry Button -->
+    <button class="return-btn green-btn" id="returnBtnGreen" onclick="returnToBot()">
+      ↩ Return To Bot
+    </button>
+    <button class="return-btn red-btn" id="returnBtnRed" onclick="handleRedBtn()">
+      ↩ Return To Bot
+    </button>
+
+  </div>
+
+  <div class="powered">
+    Powered By <span>Ravi</span> • <span>TasksWallah</span><br>
+    <span style="color:#2a3a55;font-size:0.65rem;">End-to-End Encrypted • Secure Verification</span>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  ENVIRONMENT DETECTION
+// ══════════════════════════════════════════════
+const ua = navigator.userAgent || '';
+const tg = window.Telegram?.WebApp;
+const isTelegram = /Telegram|TelegramWebApp/i.test(ua) || typeof tg !== 'undefined';
+
+const cloneApps = ['Nicegram','Nekogram','BGram','Catagram','Forkgram','Plus Messenger','Unigram','TelegramX'];
+const isClone = cloneApps.some(app => ua.includes(app));
+
+if (tg) {
+  tg.ready();
+  tg.expand();
+  const user = tg.initDataUnsafe?.user;
+  if (user) {
+    document.getElementById('hdrName').textContent = user.first_name || 'User';
+    document.getElementById('hdrId').textContent = 'ID: ' + user.id;
+    document.getElementById('hdrAvatar').textContent = (user.first_name || 'U')[0].toUpperCase();
+  }
+}
+
+// ── Device fingerprint hash ──
+function genDeviceHash() {
+  const raw = [navigator.userAgent, navigator.language, screen.width+'x'+screen.height, new Date().getTimezoneOffset()].join('|');
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
+  return 'DH' + Math.abs(hash).toString(16).toUpperCase();
+}
+const deviceHash = genDeviceHash();
+
+// ══════════════════════════════════════════════
+//  MINIMIZE / TAB-SWITCH DETECTION
+// ══════════════════════════════════════════════
+// If the user minimizes the WebApp (backgrounds the app / switches tabs)
+// and then reopens it mid-verification, we flag this as a failure reason.
+let wasMinimized = false;
+let verificationDone = false;
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && !verificationDone) {
+    wasMinimized = true;
+  } else if (!document.hidden && wasMinimized && !verificationDone) {
+    failVerification('Web Page Minimized');
+  }
+});
+
+if (tg && tg.onEvent) {
+  try {
+    tg.onEvent('viewportChanged', () => {
+      if (tg.isExpanded === false && !verificationDone) {
+        wasMinimized = true;
+      }
+    });
+  } catch(e) {}
+}
+
+// ══════════════════════════════════════════════
+//  STATE HELPERS
+// ══════════════════════════════════════════════
+function setProgress(pct) {
+  document.getElementById('progFill').style.width = pct + '%';
+  document.getElementById('progPct').textContent = pct + '%';
+}
+
+function setHeaderBadge(label, color) {
+  const badgeEl = document.getElementById('hdrBadge');
+  badgeEl.querySelector('.dot').style.background = color;
+  badgeEl.querySelector('.dot').style.animation = 'none';
+  badgeEl.style.borderColor = color + '55';
+  badgeEl.style.background = color + '15';
+  badgeEl.style.color = color;
+  document.getElementById('hdrBadgeText').textContent = label;
+}
+
+// ── SUCCESS STATE ──
+function showSuccess() {
+  verificationDone = true;
+  document.getElementById('fpWrap').classList.add('state-success');
+  document.getElementById('mainTitle').textContent = 'You Are Now Verified';
+  document.getElementById('mainTitle').classList.add('success-text');
+  document.getElementById('mainSub').textContent = 'Verification completed successfully ✅';
+  document.getElementById('mainSub').className = 'main-sub ok';
+  document.getElementById('progWrapOuter').classList.add('hide');
+  document.getElementById('returnBtnGreen').classList.add('show');
+  setHeaderBadge('VERIFIED', '#22c55e');
+}
+
+// ── FAILED STATE ──
+function failVerification(reason) {
+  verificationDone = true;
+  document.getElementById('fpWrap').classList.remove('state-success');
+  document.getElementById('fpWrap').classList.add('state-failed');
+  document.getElementById('mainTitle').textContent = 'Verification Failed';
+  document.getElementById('mainTitle').classList.add('failed-text');
+  document.getElementById('mainSub').textContent = 'Security check did not pass.';
+  document.getElementById('mainSub').className = 'main-sub error';
+  document.getElementById('progWrapOuter').classList.add('hide');
+
+  const rBox = document.getElementById('reasonBox');
+  rBox.textContent = 'Reason: ' + reason;
+  rBox.classList.add('show');
+
+  document.getElementById('returnBtnRed').classList.add('show');
+  setHeaderBadge('FAILED', '#ef4444');
+
+  sendResultToBot({
+    status: 'failed',
+    reason: reason,
+    user_hash: deviceHash,
+    user_id: tg?.initDataUnsafe?.user?.id || '',
+    env_type: isTelegram ? 'telegram' : 'browser',
+    app_type: ua,
+  });
+}
+
+// ══════════════════════════════════════════════
+//  SEND DATA TO BOT
+// ══════════════════════════════════════════════
+function sendResultToBot(payload) {
+  if (tg && tg.sendData) {
+    try {
+      tg.sendData(JSON.stringify(payload));
+    } catch (e) {
+      console.error('sendData failed:', e);
+    }
+  } else {
+    console.warn('Telegram.WebApp not available — not running inside Telegram.');
+  }
+}
+
+// ── Return / Retry button actions ──
+function returnToBot() {
+  try { tg?.close(); } catch(e) {}
+}
+
+function handleRedBtn() {
+  location.reload();
+}
+
+// ══════════════════════════════════════════════
+//  VERIFICATION FLOW
+// ══════════════════════════════════════════════
+const steps = [
+  { pct: 12, msg: 'Initializing security protocol...', delay: 500 },
+  { pct: 25, msg: 'Connecting to verification server...', delay: 700 },
+  { pct: 38, msg: 'Checking VPN & proxy status...', delay: 800 },
+  { pct: 52, msg: 'Scanning device fingerprint...', delay: 700 },
+  { pct: 65, msg: 'Verifying Telegram environment...', delay: 800 },
+  { pct: 78, msg: 'Establishing secure handshake...', delay: 700 },
+  { pct: 88, msg: 'Cross-referencing device database...', delay: 600 },
+  { pct: 95, msg: 'Running final security checks...', delay: 600 },
+  { pct: 100, msg: null, delay: 500 },
+];
+
+async function runVerification() {
+
+  if (!isTelegram && !tg) {
+    for (let s of steps.slice(0,4)) {
+      await new Promise(r => setTimeout(r, s.delay));
+      setProgress(s.pct);
+      document.getElementById('mainSub').textContent = s.msg;
+    }
+    setProgress(100);
+    await new Promise(r => setTimeout(r, 400));
+    failVerification('Must Open Inside Telegram');
+    return;
+  }
+
+  if (isClone) {
+    for (let s of steps.slice(0,5)) {
+      await new Promise(r => setTimeout(r, s.delay));
+      setProgress(s.pct);
+      document.getElementById('mainSub').textContent = s.msg;
+    }
+    setProgress(100);
+    await new Promise(r => setTimeout(r, 400));
+    failVerification('Unofficial Telegram App Detected');
+    return;
+  }
+
+  for (let i = 0; i < steps.length - 1; i++) {
+    await new Promise(r => setTimeout(r, steps[i].delay));
+
+    if (wasMinimized) {
+      failVerification('Web Page Minimized');
+      return;
+    }
+
+    setProgress(steps[i].pct);
+    const sub = document.getElementById('mainSub');
+    sub.textContent = steps[i].msg;
+    sub.className = 'main-sub active';
+  }
+
+  await new Promise(r => setTimeout(r, steps[steps.length-1].delay));
+
+  if (wasMinimized) {
+    failVerification('Web Page Minimized');
+    return;
+  }
+
+  setProgress(100);
+  document.getElementById('progLabel').textContent = 'ANALYSIS COMPLETE';
+  await new Promise(r => setTimeout(r, 500));
+
+  const user = tg?.initDataUnsafe?.user || {};
+  const payload = {
+    status:     'success',
+    vpn:        'no',
+    user_hash:  deviceHash,
+    user_id:    user.id || '',
+    user_name:  user.username || '',
+    first_name: user.first_name || '',
+    env_type:   'telegram',
+    app_type:   ua,
+  };
+
+  showSuccess();
+  sendResultToBot(payload);
+}
+
+runVerification();
+</script>
+</body>
+</html>
